@@ -45,9 +45,19 @@ uptrace-windows_amd64:
 
 .PHONY: docker-uptrace
 docker-uptrace:
-	cp ./bin/uptrace_linux_amd64 ./cmd/uptrace/uptrace
-	docker build -t uptrace ./cmd/uptrace/
-	rm ./cmd/uptrace/uptrace
+	cp ./bin/uptrace_linux_amd64 ./cmd/uptrace/uptrace_amd64
+	cp ./bin/uptrace_linux_arm64 ./cmd/uptrace/uptrace_arm64
+	docker buildx build --platform=amd64,arm64 --provenance=false -t tvduc95/uptrace:latest -t tvduc95/uptrace:$(DOCKER_TAG) --push ./cmd/uptrace/
+	rm ./cmd/uptrace/uptrace_amd64
+	rm ./cmd/uptrace/uptrace_arm64
+
+.PHONY: docker-uptrace-dev
+docker-uptrace-dev:
+	cp ./bin/uptrace_linux_amd64 ./cmd/uptrace/uptrace_amd64
+	cp ./bin/uptrace_linux_arm64 ./cmd/uptrace/uptrace_arm64
+	docker buildx build --platform=amd64,arm64 --provenance=false -t tvduc95/uptrace-dev:latest -t tvduc95/uptrace-dev:$(DOCKER_SHA) --push ./cmd/uptrace/
+	rm ./cmd/uptrace/uptrace_amd64
+	rm ./cmd/uptrace/uptrace_arm64
 
 .PHONY: deb-rpm-package
 %-package: ARCH ?= amd64
