@@ -131,8 +131,14 @@ func (h *SSOMethodHandler) Start(w http.ResponseWriter, req bunrouter.Request) e
 }
 
 func (h *SSOMethodHandler) Callback(w http.ResponseWriter, req bunrouter.Request) error {
+	ctx := req.Context()
+
 	user, err := h.exchange(w, req)
 	if err != nil {
+		return err
+	}
+
+	if err := GetOrCreateUser(ctx, h.App, user); err != nil {
 		return err
 	}
 
@@ -191,36 +197,46 @@ func (h *SSOMethodHandler) exchange(
 		return nil, fmt.Errorf("oidc: failed to read claims: %w", err)
 	}
 
-	// This default claim works with Keycloak, but not with Google Cloud
-	// which only supports `email` claim.
-	claim := "email"
-
-	if len(h.conf.Claim) > 0 {
-		claim = h.conf.Claim
+	emailKey := "email"
+	if len(h.conf.EmailClaim) > 0 {
+		emailKey = h.conf.EmailClaim
 	}
 
 	var email string
-	emailClaim := (*claims)[claim]
+	emailValue := (*claims)[emailKey]
 
-	switch emailClaim := emailClaim.(type) {
+	switch emailValue := emailValue.(type) {
 	case string:
-		email = emailClaim
+		email = emailValue
 	case nil:
-		return nil, fmt.Errorf("oidc: claim is unset: %s", claim)
+		return nil, fmt.Errorf("oidc: email claim is unset: %s", emailKey)
 	default:
-		return nil, fmt.Errorf("oidc: claim must be a string: %s", claim)
+		return nil, fmt.Errorf("oidc: email claim must be a string: %s", emailKey)
 	}
 
-	if len(email) == 0 {
-		return nil, fmt.Errorf("oidc: claim is empty: %s", claim)
+	if email == "" {
+		return nil, fmt.Errorf("oidc: email claim is empty: %s", emailKey)
 	}
 
-	user := &User{
-		Email: email,
+	var name string
+	if len(h.conf.NameClaim) > 0 {
+		name, _ = (*claims)[h.conf.NameClaim].(string)
 	}
-	user.Init()
+	if name == "" {
+		for _, key := range []string{"name", "preferred_username"} {
+			found, _ := (*claims)[key].(string)
+			if found != "" {
+				name = found
+				break
+			}
+		}
+	}
 
-	return user, nil
+	return &User{
+		Name:          name,
+		Email:         email,
+		NotifyByEmail: true,
+	}, nil
 }
 
 func randState(nByte int) (string, error) {

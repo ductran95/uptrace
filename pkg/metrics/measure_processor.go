@@ -305,8 +305,6 @@ func (p *MeasureProcessor) convertHistogramPoint(
 		return false
 	}
 
-	measure.Min = point.Min
-	measure.Max = point.Max
 	measure.Sum = point.Sum - prevPoint.Sum
 	measure.Count = point.Count - prevPoint.Count
 
@@ -347,8 +345,6 @@ func (p *MeasureProcessor) convertExpHistogramPoint(
 		return false
 	}
 
-	measure.Min = point.Min
-	measure.Max = point.Max
 	measure.Sum = point.Sum - prevPoint.Sum
 	measure.Count = point.Count - prevPoint.Count
 
@@ -391,7 +387,7 @@ func (p *MeasureProcessor) upsertMetric(ctx *measureContext, measure *Measure) {
 	p.metricCacheMu.Lock()
 	defer p.metricCacheMu.Unlock()
 
-	if _, found := p.metricCache.Get(key); found {
+	if cachedAt, found := p.metricCache.Get(key); found && time.Since(cachedAt) < 15*time.Minute {
 		return
 	}
 	p.metricCache.Put(key, time.Now())

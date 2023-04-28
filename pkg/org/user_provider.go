@@ -2,7 +2,6 @@ package org
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"sync"
@@ -36,8 +35,6 @@ func NewJWTProvider(app *bunapp.App, secretKey string) *JWTProvider {
 var _ UserProvider = (*JWTProvider)(nil)
 
 func (p *JWTProvider) Auth(req bunrouter.Request) (*User, error) {
-	ctx := req.Context()
-
 	cookie, err := req.Cookie(tokenCookieName)
 	if err != nil || cookie.Value == "" {
 		return nil, errNoUser
@@ -48,17 +45,10 @@ func (p *JWTProvider) Auth(req bunrouter.Request) (*User, error) {
 		return nil, err
 	}
 
-	user, err := SelectUserByEmail(ctx, p.app, email)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			user := &User{
-				Email: email,
-			}
-			user.Init()
-		}
-		return nil, err
-	}
-	return user, nil
+	return &User{
+		Email:         email,
+		NotifyByEmail: true,
+	}, nil
 }
 
 var jwtSigningMethod = jwt.SigningMethodHS256
@@ -125,6 +115,7 @@ func (p *CloudflareProvider) Auth(req bunrouter.Request) (*User, error) {
 	}
 
 	var claims struct {
+		Name  string `json:"name"`
 		Email string `json:"email"`
 	}
 
@@ -133,9 +124,10 @@ func (p *CloudflareProvider) Auth(req bunrouter.Request) (*User, error) {
 	}
 
 	user := &User{
-		Email: claims.Email,
+		Name:          claims.Name,
+		Email:         claims.Email,
+		NotifyByEmail: true,
 	}
-	user.Init()
 
 	return user, nil
 }

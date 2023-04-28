@@ -327,6 +327,8 @@ func (h *SentryHandler) Envelope(w http.ResponseWriter, req bunrouter.Request) e
 			if err := h.processEvent(ctx, project, event); err != nil {
 				return err
 			}
+		case "client_report":
+			// ignore
 		default:
 			h.Zap(ctx).Error("sentry: unsupported item type", zap.String("type", header.Type))
 		}
@@ -446,7 +448,8 @@ func (h *SentryHandler) sentryKey(req bunrouter.Request) (string, error) {
 
 	var sentryKey string
 
-	for _, kv := range strings.Split(auth, ", ") {
+	for _, kv := range strings.Split(auth, ",") {
+		kv = strings.Trim(kv, " ")
 		const prefix = "sentry_key="
 		if strings.HasPrefix(kv, prefix) {
 			sentryKey = strings.TrimPrefix(kv, prefix)

@@ -42,13 +42,12 @@ requires PostgreSQL database to store metadata such as metric names and alerts.
 
 ## Quickstart
 
-With just few minutes of your time, you can decide if you need Uptrace by running a
+In just few minutes, you can decide if you need Uptrace by running a
 [docker-compose example](example/docker). You can also play with the public
-[Uptrace demo](https://app.uptrace.dev/play) (no login required).
+[Uptrace Cloud demo](https://app.uptrace.dev/play) (no login required).
 
-Then follow the [getting started guide](https://uptrace.dev/get/get-started.html) to properly setup
-Uptrace by downloading a Go binary or installing a DEB/RPM package. You only need a ClickHouse
-database to start using Uptrace.
+Then follow the [getting started guide](https://uptrace.dev/get/get-started.html) to install Uptrace
+by downloading a Go binary or a DEB/RPM package.
 
 ## Help
 
@@ -76,11 +75,8 @@ Uptrace app without any limitations.
 
 **Why BSL license**?
 
-Uptrace team picked the license with the intention to allow users to monitor their applications
-using Uptrace, but to forbid other companies creating a cloud service using the code.
-
-Uptrace team provides a [cloud monitoring service](https://uptrace.dev/) ourselves in order to
-monetize our work and sustain project development.
+The Uptrace team picked BSL license with the intention to allow users monitor their applications,
+but to forbid other companies creating a [cloud service](https://uptrace.dev/cloud) using the code.
 
 **Are you open-source?**
 
